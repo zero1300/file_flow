@@ -50,7 +50,7 @@ func (u UserDao) AddUser(email, password, nickname string) error {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	if userPo.ID == 0 {
+	if ent.IsNotFound(err) {
 		_, err := u.db.User.Create().
 			SetEmail(email).
 			SetNickname(nickname).

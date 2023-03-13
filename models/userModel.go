@@ -1,7 +1,7 @@
 package models
 
 type UserLoginModel struct {
-	Email    string `json:"email" form:"email" binding:"required,len=11"`
+	Email    string `json:"email" form:"email" binding:"required,email"`
 	Password string `json:"-" form:"password" binding:"required"`
 }
 

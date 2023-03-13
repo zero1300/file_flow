@@ -15,6 +15,7 @@ func userSetup() {
 
 		user := auth.Group("user")
 		user.GET("/:id", userApi.GetUserById)
+		user.GET("/", userApi.GetUsrByToken)
 		user.POST("/list", userApi.UserList)
 		user.POST("/update", userApi.UpdateUser)
 		user.DELETE("/:id", userApi.DelUser)

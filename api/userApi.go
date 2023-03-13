@@ -1,6 +1,7 @@
 package api
 
 import (
+	"file_flow/common/helper"
 	"file_flow/common/resp"
 	"file_flow/models"
 	"file_flow/service"
@@ -59,6 +60,20 @@ func (u UserApi) Register(ctx *gin.Context) {
 func (u UserApi) GetUserById(ctx *gin.Context) {
 	idString := ctx.Param("id")
 	id, _ := strconv.Atoi(idString)
+	userEnt, err := u.userService.GetUserById(id)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	resp.Success(ctx, userEnt)
+}
+
+func (u UserApi) GetUsrByToken(ctx *gin.Context) {
+	id, err := helper.GetUserIdByToken(ctx)
+	if err != nil {
+		resp.Fail(ctx, "token 无效")
+		return
+	}
 	userEnt, err := u.userService.GetUserById(id)
 	if err != nil {
 		resp.Fail(ctx, err.Error())
