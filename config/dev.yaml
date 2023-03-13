@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+db:
+  driverName: postgres
+  dsn: "host=127.0.0.1 port=5432 user=postgres dbname=file_flow password=Root@1998 sslmode=disable"
+
+redis:
+  addr: 127.0.0.1:6379
+  db: 2
+
+jwt:
+  tokenExpire: 24
+  signingKey: code0451
