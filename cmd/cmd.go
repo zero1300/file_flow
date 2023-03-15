@@ -12,6 +12,7 @@ func Start() {
 	config.InitConfig()
 	global.Client = load.InitDB()
 	global.Redis = load.InitRedis()
+	global.Minio = load.InitMinio()
 	router.InitRoute()
 }
 

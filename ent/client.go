@@ -10,6 +10,7 @@ import (
 
 	"file_flow/ent/migrate"
 
+	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/user"
 
 	"entgo.io/ent"
@@ -22,6 +23,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// CentralStoragePool is the client for interacting with the CentralStoragePool builders.
+	CentralStoragePool *CentralStoragePoolClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -37,6 +40,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.CentralStoragePool = NewCentralStoragePoolClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -118,9 +122,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		CentralStoragePool: NewCentralStoragePoolClient(cfg),
+		User:               NewUserClient(cfg),
 	}, nil
 }
 
@@ -138,16 +143,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		CentralStoragePool: NewCentralStoragePoolClient(cfg),
+		User:               NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		CentralStoragePool.
 //		Query().
 //		Count(ctx)
 //
@@ -170,22 +176,146 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.CentralStoragePool.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.CentralStoragePool.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *CentralStoragePoolMutation:
+		return c.CentralStoragePool.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// CentralStoragePoolClient is a client for the CentralStoragePool schema.
+type CentralStoragePoolClient struct {
+	config
+}
+
+// NewCentralStoragePoolClient returns a client for the CentralStoragePool from the given config.
+func NewCentralStoragePoolClient(c config) *CentralStoragePoolClient {
+	return &CentralStoragePoolClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `centralstoragepool.Hooks(f(g(h())))`.
+func (c *CentralStoragePoolClient) Use(hooks ...Hook) {
+	c.hooks.CentralStoragePool = append(c.hooks.CentralStoragePool, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `centralstoragepool.Intercept(f(g(h())))`.
+func (c *CentralStoragePoolClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CentralStoragePool = append(c.inters.CentralStoragePool, interceptors...)
+}
+
+// Create returns a builder for creating a CentralStoragePool entity.
+func (c *CentralStoragePoolClient) Create() *CentralStoragePoolCreate {
+	mutation := newCentralStoragePoolMutation(c.config, OpCreate)
+	return &CentralStoragePoolCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CentralStoragePool entities.
+func (c *CentralStoragePoolClient) CreateBulk(builders ...*CentralStoragePoolCreate) *CentralStoragePoolCreateBulk {
+	return &CentralStoragePoolCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CentralStoragePool.
+func (c *CentralStoragePoolClient) Update() *CentralStoragePoolUpdate {
+	mutation := newCentralStoragePoolMutation(c.config, OpUpdate)
+	return &CentralStoragePoolUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CentralStoragePoolClient) UpdateOne(csp *CentralStoragePool) *CentralStoragePoolUpdateOne {
+	mutation := newCentralStoragePoolMutation(c.config, OpUpdateOne, withCentralStoragePool(csp))
+	return &CentralStoragePoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CentralStoragePoolClient) UpdateOneID(id int) *CentralStoragePoolUpdateOne {
+	mutation := newCentralStoragePoolMutation(c.config, OpUpdateOne, withCentralStoragePoolID(id))
+	return &CentralStoragePoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CentralStoragePool.
+func (c *CentralStoragePoolClient) Delete() *CentralStoragePoolDelete {
+	mutation := newCentralStoragePoolMutation(c.config, OpDelete)
+	return &CentralStoragePoolDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CentralStoragePoolClient) DeleteOne(csp *CentralStoragePool) *CentralStoragePoolDeleteOne {
+	return c.DeleteOneID(csp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CentralStoragePoolClient) DeleteOneID(id int) *CentralStoragePoolDeleteOne {
+	builder := c.Delete().Where(centralstoragepool.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CentralStoragePoolDeleteOne{builder}
+}
+
+// Query returns a query builder for CentralStoragePool.
+func (c *CentralStoragePoolClient) Query() *CentralStoragePoolQuery {
+	return &CentralStoragePoolQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCentralStoragePool},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CentralStoragePool entity by its id.
+func (c *CentralStoragePoolClient) Get(ctx context.Context, id int) (*CentralStoragePool, error) {
+	return c.Query().Where(centralstoragepool.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CentralStoragePoolClient) GetX(ctx context.Context, id int) *CentralStoragePool {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CentralStoragePoolClient) Hooks() []Hook {
+	hooks := c.hooks.CentralStoragePool
+	return append(hooks[:len(hooks):len(hooks)], centralstoragepool.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *CentralStoragePoolClient) Interceptors() []Interceptor {
+	inters := c.inters.CentralStoragePool
+	return append(inters[:len(inters):len(inters)], centralstoragepool.Interceptors[:]...)
+}
+
+func (c *CentralStoragePoolClient) mutate(ctx context.Context, m *CentralStoragePoolMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CentralStoragePoolCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CentralStoragePoolUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CentralStoragePoolUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CentralStoragePoolDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CentralStoragePool mutation op: %q", m.Op())
 	}
 }
 
@@ -312,9 +442,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		CentralStoragePool, User []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		CentralStoragePool, User []ent.Interceptor
 	}
 )

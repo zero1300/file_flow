@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"errors"
+	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/user"
 	"fmt"
 	"reflect"
@@ -65,7 +66,8 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		user.Table: user.ValidColumn,
+		centralstoragepool.Table: centralstoragepool.ValidColumn,
+		user.Table:               user.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

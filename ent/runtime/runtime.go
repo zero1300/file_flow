@@ -3,6 +3,7 @@
 package runtime
 
 import (
+	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/schema"
 	"file_flow/ent/user"
 	"time"
@@ -12,6 +13,33 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	centralstoragepoolMixin := schema.CentralStoragePool{}.Mixin()
+	centralstoragepoolMixinHooks0 := centralstoragepoolMixin[0].Hooks()
+	centralstoragepool.Hooks[0] = centralstoragepoolMixinHooks0[0]
+	centralstoragepoolMixinInters0 := centralstoragepoolMixin[0].Interceptors()
+	centralstoragepool.Interceptors[0] = centralstoragepoolMixinInters0[0]
+	centralstoragepoolFields := schema.CentralStoragePool{}.Fields()
+	_ = centralstoragepoolFields
+	// centralstoragepoolDescFilename is the schema descriptor for filename field.
+	centralstoragepoolDescFilename := centralstoragepoolFields[0].Descriptor()
+	// centralstoragepool.FilenameValidator is a validator for the "filename" field. It is called by the builders before save.
+	centralstoragepool.FilenameValidator = centralstoragepoolDescFilename.Validators[0].(func(string) error)
+	// centralstoragepoolDescExt is the schema descriptor for ext field.
+	centralstoragepoolDescExt := centralstoragepoolFields[1].Descriptor()
+	// centralstoragepool.ExtValidator is a validator for the "ext" field. It is called by the builders before save.
+	centralstoragepool.ExtValidator = centralstoragepoolDescExt.Validators[0].(func(string) error)
+	// centralstoragepoolDescPath is the schema descriptor for path field.
+	centralstoragepoolDescPath := centralstoragepoolFields[3].Descriptor()
+	// centralstoragepool.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	centralstoragepool.PathValidator = centralstoragepoolDescPath.Validators[0].(func(string) error)
+	// centralstoragepoolDescHash is the schema descriptor for hash field.
+	centralstoragepoolDescHash := centralstoragepoolFields[4].Descriptor()
+	// centralstoragepool.HashValidator is a validator for the "hash" field. It is called by the builders before save.
+	centralstoragepool.HashValidator = centralstoragepoolDescHash.Validators[0].(func(string) error)
+	// centralstoragepoolDescCreateAt is the schema descriptor for create_at field.
+	centralstoragepoolDescCreateAt := centralstoragepoolFields[5].Descriptor()
+	// centralstoragepool.DefaultCreateAt holds the default value on creation for the create_at field.
+	centralstoragepool.DefaultCreateAt = centralstoragepoolDescCreateAt.Default.(time.Time)
 	userMixin := schema.User{}.Mixin()
 	userMixinHooks0 := userMixin[0].Hooks()
 	user.Hooks[0] = userMixinHooks0[0]

@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The CentralStoragePoolFunc type is an adapter to allow the use of ordinary
+// function as CentralStoragePool mutator.
+type CentralStoragePoolFunc func(context.Context, *ent.CentralStoragePoolMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CentralStoragePoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CentralStoragePoolMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CentralStoragePoolMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

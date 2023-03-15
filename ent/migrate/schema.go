@@ -8,6 +8,23 @@ import (
 )
 
 var (
+	// CentralStoragePoolsColumns holds the columns for the "central_storage_pools" table.
+	CentralStoragePoolsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "delete_at", Type: field.TypeTime, Nullable: true},
+		{Name: "filename", Type: field.TypeString, Size: 2147483647},
+		{Name: "ext", Type: field.TypeString, Size: 2147483647},
+		{Name: "size", Type: field.TypeFloat64},
+		{Name: "path", Type: field.TypeString, Size: 2147483647},
+		{Name: "hash", Type: field.TypeString, Size: 2147483647},
+		{Name: "create_at", Type: field.TypeTime},
+	}
+	// CentralStoragePoolsTable holds the schema information for the "central_storage_pools" table.
+	CentralStoragePoolsTable = &schema.Table{
+		Name:       "central_storage_pools",
+		Columns:    CentralStoragePoolsColumns,
+		PrimaryKey: []*schema.Column{CentralStoragePoolsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -26,6 +43,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CentralStoragePoolsTable,
 		UsersTable,
 	}
 )

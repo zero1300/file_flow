@@ -19,3 +19,10 @@ email:
   username: mefqaq419093@163.com
   password: TBDLMUJZQUHKAEWD
   host: smtp.163.com
+
+minio:
+  endpoint: localhost:9000
+  accessKeyID: pQVJVMIAidUiyYH2
+  secretAccessKey: dtTpbfJZpjuUT6KcTHWwekhUT0FxI4Xx
+  useSSL: false
+  bucketName: file-flow
