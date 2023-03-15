@@ -8,6 +8,7 @@ type UserLoginModel struct {
 type UserRegModel struct {
 	UserLoginModel
 	Nickname string `form:"nickname" `
+	Code     string `form:"code" binding:"required,len=4"`
 }
 
 type UserUpdateModel struct {

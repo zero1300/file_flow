@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"file_flow/common/helper"
 	"file_flow/common/jwt"
 	"file_flow/dao"
 	"file_flow/ent"
@@ -53,7 +54,7 @@ func (u UserService) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", errors.New("用户不存在")
 	}
-	if user.Password != password {
+	if !helper.ComparePassword(password, user.Password) {
 		return "", errors.New("密码错误")
 	}
 	token, err := getTokenById(user.ID)
@@ -72,9 +73,13 @@ func (u UserService) Login(email, password string) (string, error) {
 func (u UserService) AddUser(email, password, nickname string) error {
 	count := u.userDao.CountEmail(email)
 	if count == 1 {
-		return errors.New("该手机号已被注册")
+		return errors.New("该邮箱已被注册")
 	}
-	err := u.userDao.AddUser(email, password, nickname)
+	hashedPassword, err2 := helper.GenPassword(password)
+	if err2 != nil {
+		return errors.New("生成用户密码失败")
+	}
+	err := u.userDao.AddUser(email, hashedPassword, nickname)
 	if err != nil {
 		logrus.Info(err.Error())
 		return err

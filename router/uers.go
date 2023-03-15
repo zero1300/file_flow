@@ -11,6 +11,7 @@ func userSetup() {
 		userApi := api.NewUserApi()
 
 		public.POST("/login", userApi.Login)
+		public.POST("/code", userApi.GetCode)
 		public.POST("/reg", userApi.Register)
 
 		user := auth.Group("user")

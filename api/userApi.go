@@ -1,12 +1,18 @@
 package api
 
 import (
+	"context"
+	"file_flow/common/email"
 	"file_flow/common/helper"
 	"file_flow/common/resp"
+	"file_flow/global"
+	"file_flow/global/constants"
 	"file_flow/models"
 	"file_flow/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"strconv"
+	"time"
 )
 
 type UserApi struct {
@@ -36,12 +42,38 @@ func (u UserApi) Login(ctx *gin.Context) {
 	resp.Success(ctx, data)
 }
 
+func (u UserApi) GetCode(ctx *gin.Context) {
+	var form struct {
+		Email string `form:"email" binding:"required,email"`
+	}
+	err := ctx.ShouldBind(&form)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	code := helper.GenerateVerificationCode()
+	log.Println("验证码: " + code)
+	err = email.SendVerificationCode(form.Email, code)
+	if err != nil {
+		resp.Fail(ctx, "验证码发送失败: "+err.Error())
+		return
+	}
+	global.Redis.Set(context.Background(), constants.VerificationCodeKeyPrefix+form.Email, code, 3*time.Minute)
+	resp.Success(ctx, gin.H{})
+}
+
 func (u UserApi) Register(ctx *gin.Context) {
 	var form models.UserRegModel
 
 	err := ctx.ShouldBind(&form)
 	if err != nil {
 		resp.Fail(ctx, err.Error())
+		return
+	}
+
+	val := global.Redis.Get(context.Background(), constants.VerificationCodeKeyPrefix+form.Email).Val()
+	if val != form.Code {
+		resp.Fail(ctx, "验证码错误")
 		return
 	}
 

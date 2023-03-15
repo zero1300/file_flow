@@ -12,3 +12,10 @@ redis:
 jwt:
   tokenExpire: 24
   signingKey: code0451
+
+email:
+  from: mefqaq419093@163.com
+  addr: smtp.163.com:465
+  username: mefqaq419093@163.com
+  password: TBDLMUJZQUHKAEWD
+  host: smtp.163.com
