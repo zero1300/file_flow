@@ -16,6 +16,8 @@ type Tx struct {
 	CentralStoragePool *CentralStoragePoolClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserStoragePool is the client for interacting with the UserStoragePool builders.
+	UserStoragePool *UserStoragePoolClient
 
 	// lazily loaded.
 	client     *Client
@@ -149,6 +151,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.CentralStoragePool = NewCentralStoragePoolClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserStoragePool = NewUserStoragePoolClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

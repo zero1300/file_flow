@@ -6,6 +6,7 @@ import (
 	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/schema"
 	"file_flow/ent/user"
+	"file_flow/ent/userstoragepool"
 	"time"
 )
 
@@ -67,6 +68,29 @@ func init() {
 	userDescCreateAt := userFields[4].Descriptor()
 	// user.DefaultCreateAt holds the default value on creation for the create_at field.
 	user.DefaultCreateAt = userDescCreateAt.Default.(time.Time)
+	userstoragepoolMixin := schema.UserStoragePool{}.Mixin()
+	userstoragepoolMixinHooks0 := userstoragepoolMixin[0].Hooks()
+	userstoragepool.Hooks[0] = userstoragepoolMixinHooks0[0]
+	userstoragepoolMixinInters0 := userstoragepoolMixin[0].Interceptors()
+	userstoragepool.Interceptors[0] = userstoragepoolMixinInters0[0]
+	userstoragepoolFields := schema.UserStoragePool{}.Fields()
+	_ = userstoragepoolFields
+	// userstoragepoolDescParentID is the schema descriptor for parent_id field.
+	userstoragepoolDescParentID := userstoragepoolFields[2].Descriptor()
+	// userstoragepool.DefaultParentID holds the default value on creation for the parent_id field.
+	userstoragepool.DefaultParentID = userstoragepoolDescParentID.Default.(int)
+	// userstoragepoolDescFilename is the schema descriptor for filename field.
+	userstoragepoolDescFilename := userstoragepoolFields[3].Descriptor()
+	// userstoragepool.FilenameValidator is a validator for the "filename" field. It is called by the builders before save.
+	userstoragepool.FilenameValidator = userstoragepoolDescFilename.Validators[0].(func(string) error)
+	// userstoragepoolDescExt is the schema descriptor for ext field.
+	userstoragepoolDescExt := userstoragepoolFields[4].Descriptor()
+	// userstoragepool.ExtValidator is a validator for the "ext" field. It is called by the builders before save.
+	userstoragepool.ExtValidator = userstoragepoolDescExt.Validators[0].(func(string) error)
+	// userstoragepoolDescCreateAt is the schema descriptor for create_at field.
+	userstoragepoolDescCreateAt := userstoragepoolFields[5].Descriptor()
+	// userstoragepool.DefaultCreateAt holds the default value on creation for the create_at field.
+	userstoragepool.DefaultCreateAt = userstoragepoolDescCreateAt.Default.(time.Time)
 }
 
 const (

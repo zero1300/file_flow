@@ -41,10 +41,28 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// UserStoragePoolsColumns holds the columns for the "user_storage_pools" table.
+	UserStoragePoolsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "delete_at", Type: field.TypeTime, Nullable: true},
+		{Name: "uid", Type: field.TypeInt},
+		{Name: "repo_id", Type: field.TypeInt},
+		{Name: "parent_id", Type: field.TypeInt, Default: 0},
+		{Name: "filename", Type: field.TypeString, Size: 2147483647},
+		{Name: "ext", Type: field.TypeString, Size: 2147483647},
+		{Name: "create_at", Type: field.TypeTime},
+	}
+	// UserStoragePoolsTable holds the schema information for the "user_storage_pools" table.
+	UserStoragePoolsTable = &schema.Table{
+		Name:       "user_storage_pools",
+		Columns:    UserStoragePoolsColumns,
+		PrimaryKey: []*schema.Column{UserStoragePoolsColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CentralStoragePoolsTable,
 		UsersTable,
+		UserStoragePoolsTable,
 	}
 )
 

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/user"
+	"file_flow/ent/userstoragepool"
 	"fmt"
 	"reflect"
 
@@ -68,6 +69,7 @@ func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		centralstoragepool.Table: centralstoragepool.ValidColumn,
 		user.Table:               user.ValidColumn,
+		userstoragepool.Table:    userstoragepool.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

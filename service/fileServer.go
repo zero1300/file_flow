@@ -6,6 +6,7 @@ import (
 	"file_flow/common/upload"
 	"file_flow/dao"
 	"file_flow/ent"
+	"file_flow/models"
 	"fmt"
 	"github.com/google/uuid"
 	"mime/multipart"
@@ -25,7 +26,7 @@ func NewFileService() *FileService {
 	return fileService
 }
 
-func (f FileService) UploadFile(fileHeader *multipart.FileHeader) error {
+func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid int) error {
 
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -59,9 +60,15 @@ func (f FileService) UploadFile(fileHeader *multipart.FileHeader) error {
 	one.Ext = ext
 	one.Hash = fmt.Sprintf("%x", hash)
 	one.Size = float64(fileHeader.Size)
-	_, err = f.fileDao.AddFile(one)
+	onePo, err := f.fileDao.AddFile(one)
 	if err != nil {
 		return errors.New("上传文件失败: : " + err.Error())
 	}
+
+	f.fileDao.AddRelation(onePo, uid)
 	return nil
+}
+
+func (f FileService) GetUserFile(uid, parentId int, p models.Paginate) ([]models.File, int, error) {
+	return f.fileDao.GetUserFiles(uid, parentId, p)
 }

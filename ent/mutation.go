@@ -8,6 +8,7 @@ import (
 	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/predicate"
 	"file_flow/ent/user"
+	"file_flow/ent/userstoragepool"
 	"fmt"
 	"sync"
 	"time"
@@ -27,6 +28,7 @@ const (
 	// Node types.
 	TypeCentralStoragePool = "CentralStoragePool"
 	TypeUser               = "User"
+	TypeUserStoragePool    = "UserStoragePool"
 )
 
 // CentralStoragePoolMutation represents an operation that mutates the CentralStoragePool nodes in the graph.
@@ -1353,4 +1355,778 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown User edge %s", name)
+}
+
+// UserStoragePoolMutation represents an operation that mutates the UserStoragePool nodes in the graph.
+type UserStoragePoolMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	delete_at     *time.Time
+	uid           *int
+	adduid        *int
+	repo_id       *int
+	addrepo_id    *int
+	parent_id     *int
+	addparent_id  *int
+	filename      *string
+	ext           *string
+	create_at     *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*UserStoragePool, error)
+	predicates    []predicate.UserStoragePool
+}
+
+var _ ent.Mutation = (*UserStoragePoolMutation)(nil)
+
+// userstoragepoolOption allows management of the mutation configuration using functional options.
+type userstoragepoolOption func(*UserStoragePoolMutation)
+
+// newUserStoragePoolMutation creates new mutation for the UserStoragePool entity.
+func newUserStoragePoolMutation(c config, op Op, opts ...userstoragepoolOption) *UserStoragePoolMutation {
+	m := &UserStoragePoolMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserStoragePool,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUserStoragePoolID sets the ID field of the mutation.
+func withUserStoragePoolID(id int) userstoragepoolOption {
+	return func(m *UserStoragePoolMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UserStoragePool
+		)
+		m.oldValue = func(ctx context.Context) (*UserStoragePool, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UserStoragePool.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUserStoragePool sets the old UserStoragePool of the mutation.
+func withUserStoragePool(node *UserStoragePool) userstoragepoolOption {
+	return func(m *UserStoragePoolMutation) {
+		m.oldValue = func(context.Context) (*UserStoragePool, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserStoragePoolMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserStoragePoolMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UserStoragePoolMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UserStoragePoolMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UserStoragePool.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetDeleteAt sets the "delete_at" field.
+func (m *UserStoragePoolMutation) SetDeleteAt(t time.Time) {
+	m.delete_at = &t
+}
+
+// DeleteAt returns the value of the "delete_at" field in the mutation.
+func (m *UserStoragePoolMutation) DeleteAt() (r time.Time, exists bool) {
+	v := m.delete_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeleteAt returns the old "delete_at" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldDeleteAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeleteAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeleteAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeleteAt: %w", err)
+	}
+	return oldValue.DeleteAt, nil
+}
+
+// ClearDeleteAt clears the value of the "delete_at" field.
+func (m *UserStoragePoolMutation) ClearDeleteAt() {
+	m.delete_at = nil
+	m.clearedFields[userstoragepool.FieldDeleteAt] = struct{}{}
+}
+
+// DeleteAtCleared returns if the "delete_at" field was cleared in this mutation.
+func (m *UserStoragePoolMutation) DeleteAtCleared() bool {
+	_, ok := m.clearedFields[userstoragepool.FieldDeleteAt]
+	return ok
+}
+
+// ResetDeleteAt resets all changes to the "delete_at" field.
+func (m *UserStoragePoolMutation) ResetDeleteAt() {
+	m.delete_at = nil
+	delete(m.clearedFields, userstoragepool.FieldDeleteAt)
+}
+
+// SetUID sets the "uid" field.
+func (m *UserStoragePoolMutation) SetUID(i int) {
+	m.uid = &i
+	m.adduid = nil
+}
+
+// UID returns the value of the "uid" field in the mutation.
+func (m *UserStoragePoolMutation) UID() (r int, exists bool) {
+	v := m.uid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUID returns the old "uid" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldUID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUID: %w", err)
+	}
+	return oldValue.UID, nil
+}
+
+// AddUID adds i to the "uid" field.
+func (m *UserStoragePoolMutation) AddUID(i int) {
+	if m.adduid != nil {
+		*m.adduid += i
+	} else {
+		m.adduid = &i
+	}
+}
+
+// AddedUID returns the value that was added to the "uid" field in this mutation.
+func (m *UserStoragePoolMutation) AddedUID() (r int, exists bool) {
+	v := m.adduid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUID resets all changes to the "uid" field.
+func (m *UserStoragePoolMutation) ResetUID() {
+	m.uid = nil
+	m.adduid = nil
+}
+
+// SetRepoID sets the "repo_id" field.
+func (m *UserStoragePoolMutation) SetRepoID(i int) {
+	m.repo_id = &i
+	m.addrepo_id = nil
+}
+
+// RepoID returns the value of the "repo_id" field in the mutation.
+func (m *UserStoragePoolMutation) RepoID() (r int, exists bool) {
+	v := m.repo_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRepoID returns the old "repo_id" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldRepoID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRepoID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRepoID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRepoID: %w", err)
+	}
+	return oldValue.RepoID, nil
+}
+
+// AddRepoID adds i to the "repo_id" field.
+func (m *UserStoragePoolMutation) AddRepoID(i int) {
+	if m.addrepo_id != nil {
+		*m.addrepo_id += i
+	} else {
+		m.addrepo_id = &i
+	}
+}
+
+// AddedRepoID returns the value that was added to the "repo_id" field in this mutation.
+func (m *UserStoragePoolMutation) AddedRepoID() (r int, exists bool) {
+	v := m.addrepo_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRepoID resets all changes to the "repo_id" field.
+func (m *UserStoragePoolMutation) ResetRepoID() {
+	m.repo_id = nil
+	m.addrepo_id = nil
+}
+
+// SetParentID sets the "parent_id" field.
+func (m *UserStoragePoolMutation) SetParentID(i int) {
+	m.parent_id = &i
+	m.addparent_id = nil
+}
+
+// ParentID returns the value of the "parent_id" field in the mutation.
+func (m *UserStoragePoolMutation) ParentID() (r int, exists bool) {
+	v := m.parent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentID returns the old "parent_id" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldParentID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentID: %w", err)
+	}
+	return oldValue.ParentID, nil
+}
+
+// AddParentID adds i to the "parent_id" field.
+func (m *UserStoragePoolMutation) AddParentID(i int) {
+	if m.addparent_id != nil {
+		*m.addparent_id += i
+	} else {
+		m.addparent_id = &i
+	}
+}
+
+// AddedParentID returns the value that was added to the "parent_id" field in this mutation.
+func (m *UserStoragePoolMutation) AddedParentID() (r int, exists bool) {
+	v := m.addparent_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetParentID resets all changes to the "parent_id" field.
+func (m *UserStoragePoolMutation) ResetParentID() {
+	m.parent_id = nil
+	m.addparent_id = nil
+}
+
+// SetFilename sets the "filename" field.
+func (m *UserStoragePoolMutation) SetFilename(s string) {
+	m.filename = &s
+}
+
+// Filename returns the value of the "filename" field in the mutation.
+func (m *UserStoragePoolMutation) Filename() (r string, exists bool) {
+	v := m.filename
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFilename returns the old "filename" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldFilename(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFilename is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFilename requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFilename: %w", err)
+	}
+	return oldValue.Filename, nil
+}
+
+// ResetFilename resets all changes to the "filename" field.
+func (m *UserStoragePoolMutation) ResetFilename() {
+	m.filename = nil
+}
+
+// SetExt sets the "ext" field.
+func (m *UserStoragePoolMutation) SetExt(s string) {
+	m.ext = &s
+}
+
+// Ext returns the value of the "ext" field in the mutation.
+func (m *UserStoragePoolMutation) Ext() (r string, exists bool) {
+	v := m.ext
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExt returns the old "ext" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldExt(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExt: %w", err)
+	}
+	return oldValue.Ext, nil
+}
+
+// ResetExt resets all changes to the "ext" field.
+func (m *UserStoragePoolMutation) ResetExt() {
+	m.ext = nil
+}
+
+// SetCreateAt sets the "create_at" field.
+func (m *UserStoragePoolMutation) SetCreateAt(t time.Time) {
+	m.create_at = &t
+}
+
+// CreateAt returns the value of the "create_at" field in the mutation.
+func (m *UserStoragePoolMutation) CreateAt() (r time.Time, exists bool) {
+	v := m.create_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateAt returns the old "create_at" field's value of the UserStoragePool entity.
+// If the UserStoragePool object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStoragePoolMutation) OldCreateAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateAt: %w", err)
+	}
+	return oldValue.CreateAt, nil
+}
+
+// ResetCreateAt resets all changes to the "create_at" field.
+func (m *UserStoragePoolMutation) ResetCreateAt() {
+	m.create_at = nil
+}
+
+// Where appends a list predicates to the UserStoragePoolMutation builder.
+func (m *UserStoragePoolMutation) Where(ps ...predicate.UserStoragePool) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserStoragePoolMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserStoragePoolMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserStoragePool, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserStoragePoolMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserStoragePoolMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserStoragePool).
+func (m *UserStoragePoolMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserStoragePoolMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.delete_at != nil {
+		fields = append(fields, userstoragepool.FieldDeleteAt)
+	}
+	if m.uid != nil {
+		fields = append(fields, userstoragepool.FieldUID)
+	}
+	if m.repo_id != nil {
+		fields = append(fields, userstoragepool.FieldRepoID)
+	}
+	if m.parent_id != nil {
+		fields = append(fields, userstoragepool.FieldParentID)
+	}
+	if m.filename != nil {
+		fields = append(fields, userstoragepool.FieldFilename)
+	}
+	if m.ext != nil {
+		fields = append(fields, userstoragepool.FieldExt)
+	}
+	if m.create_at != nil {
+		fields = append(fields, userstoragepool.FieldCreateAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserStoragePoolMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case userstoragepool.FieldDeleteAt:
+		return m.DeleteAt()
+	case userstoragepool.FieldUID:
+		return m.UID()
+	case userstoragepool.FieldRepoID:
+		return m.RepoID()
+	case userstoragepool.FieldParentID:
+		return m.ParentID()
+	case userstoragepool.FieldFilename:
+		return m.Filename()
+	case userstoragepool.FieldExt:
+		return m.Ext()
+	case userstoragepool.FieldCreateAt:
+		return m.CreateAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserStoragePoolMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case userstoragepool.FieldDeleteAt:
+		return m.OldDeleteAt(ctx)
+	case userstoragepool.FieldUID:
+		return m.OldUID(ctx)
+	case userstoragepool.FieldRepoID:
+		return m.OldRepoID(ctx)
+	case userstoragepool.FieldParentID:
+		return m.OldParentID(ctx)
+	case userstoragepool.FieldFilename:
+		return m.OldFilename(ctx)
+	case userstoragepool.FieldExt:
+		return m.OldExt(ctx)
+	case userstoragepool.FieldCreateAt:
+		return m.OldCreateAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown UserStoragePool field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserStoragePoolMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case userstoragepool.FieldDeleteAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeleteAt(v)
+		return nil
+	case userstoragepool.FieldUID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUID(v)
+		return nil
+	case userstoragepool.FieldRepoID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRepoID(v)
+		return nil
+	case userstoragepool.FieldParentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentID(v)
+		return nil
+	case userstoragepool.FieldFilename:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFilename(v)
+		return nil
+	case userstoragepool.FieldExt:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExt(v)
+		return nil
+	case userstoragepool.FieldCreateAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserStoragePool field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserStoragePoolMutation) AddedFields() []string {
+	var fields []string
+	if m.adduid != nil {
+		fields = append(fields, userstoragepool.FieldUID)
+	}
+	if m.addrepo_id != nil {
+		fields = append(fields, userstoragepool.FieldRepoID)
+	}
+	if m.addparent_id != nil {
+		fields = append(fields, userstoragepool.FieldParentID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserStoragePoolMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case userstoragepool.FieldUID:
+		return m.AddedUID()
+	case userstoragepool.FieldRepoID:
+		return m.AddedRepoID()
+	case userstoragepool.FieldParentID:
+		return m.AddedParentID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserStoragePoolMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case userstoragepool.FieldUID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUID(v)
+		return nil
+	case userstoragepool.FieldRepoID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRepoID(v)
+		return nil
+	case userstoragepool.FieldParentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddParentID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserStoragePool numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserStoragePoolMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(userstoragepool.FieldDeleteAt) {
+		fields = append(fields, userstoragepool.FieldDeleteAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserStoragePoolMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserStoragePoolMutation) ClearField(name string) error {
+	switch name {
+	case userstoragepool.FieldDeleteAt:
+		m.ClearDeleteAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UserStoragePool nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserStoragePoolMutation) ResetField(name string) error {
+	switch name {
+	case userstoragepool.FieldDeleteAt:
+		m.ResetDeleteAt()
+		return nil
+	case userstoragepool.FieldUID:
+		m.ResetUID()
+		return nil
+	case userstoragepool.FieldRepoID:
+		m.ResetRepoID()
+		return nil
+	case userstoragepool.FieldParentID:
+		m.ResetParentID()
+		return nil
+	case userstoragepool.FieldFilename:
+		m.ResetFilename()
+		return nil
+	case userstoragepool.FieldExt:
+		m.ResetExt()
+		return nil
+	case userstoragepool.FieldCreateAt:
+		m.ResetCreateAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UserStoragePool field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserStoragePoolMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserStoragePoolMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserStoragePoolMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserStoragePoolMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserStoragePoolMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserStoragePoolMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserStoragePoolMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UserStoragePool unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserStoragePoolMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UserStoragePool edge %s", name)
 }

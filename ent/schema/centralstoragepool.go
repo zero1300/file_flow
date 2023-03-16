@@ -2,6 +2,8 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 	"file_flow/ent/mixin"
 	"time"
@@ -21,6 +23,12 @@ func (CentralStoragePool) Fields() []ent.Field {
 		field.Text("path").NotEmpty().Comment("文件路径"),
 		field.Text("hash").NotEmpty().Comment("文件哈希"),
 		field.Time("create_at").Default(time.Now()).Immutable(),
+	}
+}
+
+func (CentralStoragePool) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entsql.Annotation{Table: "central_storage_pool"},
 	}
 }
 
