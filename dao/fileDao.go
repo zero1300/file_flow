@@ -34,10 +34,11 @@ func (f FileDao) AddFile(file ent.CentralStoragePool) (*ent.CentralStoragePool, 
 	return f.db.CentralStoragePool.Create().SetExt(file.Ext).SetFilename(file.Filename).SetHash(file.Hash).SetPath(file.Path).SetSize(file.Size).Save(context.Background())
 }
 
-func (f FileDao) AddRelation(file *ent.CentralStoragePool, uid int) {
+func (f FileDao) AddRelation(file *ent.CentralStoragePool, uid, parentId int) {
 	_, err := f.db.UserStoragePool.Create().SetExt(file.Ext).
 		SetFilename(file.Filename).
 		SetRepoID(file.ID).
+		SetParentID(parentId).
 		SetUID(uid).Save(context.Background())
 	if err != nil {
 		fmt.Println(err.Error())
@@ -63,10 +64,21 @@ func (f FileDao) getFileInfoExpand(files []*ent.UserStoragePool) []models.File {
 		filesModel.Filename = files[i].Filename
 		filesModel.CreateAt = files[i].CreateAt
 		filesModel.Ext = files[i].Ext
-		f := f.db.CentralStoragePool.GetX(context.Background(), files[i].RepoID)
-		filesModel.Path = f.Path
-		filesModel.Size = f.Size
+		if files[i].RepoID != 0 {
+			// RepoID 表示是文件夹
+			f := f.db.CentralStoragePool.GetX(context.Background(), files[i].RepoID)
+			filesModel.Path = f.Path
+			filesModel.Size = f.Size
+		}
 		filesModels = append(filesModels, filesModel)
 	}
 	return filesModels
+}
+
+func (f FileDao) CreateFolder(name string, parentId, uid int) (*ent.UserStoragePool, error) {
+	return f.db.UserStoragePool.Create().SetFilename(name).SetParentID(parentId).SetUID(uid).SetRepoID(0).SetExt("dir").Save(context.Background())
+}
+
+func (f FileDao) CheckFilenameUnique(name string, parentId, uid int) (int, error) {
+	return f.db.UserStoragePool.Query().Where(userstoragepool.Filename(name), userstoragepool.ParentID(parentId), userstoragepool.UID(uid)).Count(context.Background())
 }

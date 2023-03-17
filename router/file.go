@@ -12,6 +12,6 @@ func fileSetup() {
 		file := auth.Group("file")
 		file.POST("/upload", fileApi.FileUpload)
 		file.POST("/getUserFiles", fileApi.UserFiles)
-
+		file.POST("/newFolder", fileApi.NewFolder)
 	})
 }

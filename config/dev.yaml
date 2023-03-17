@@ -10,7 +10,7 @@ redis:
   db: 2
 
 jwt:
-  tokenExpire: 24
+  tokenExpire: 72
   signingKey: code0451
 
 email:

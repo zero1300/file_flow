@@ -26,7 +26,7 @@ func NewFileService() *FileService {
 	return fileService
 }
 
-func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid int) error {
+func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId int) error {
 
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -38,37 +38,59 @@ func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid int) error
 		return errors.New("读取文件异常: " + err.Error())
 	}
 	hash := md5.Sum(b)
-	_, err = f.fileDao.GetFileByHash(fmt.Sprintf("%x", hash))
-	if !ent.IsNotFound(err) {
-		return errors.New("文件已存在")
-	}
-	newUUID, err2 := uuid.NewUUID()
-	if err2 != nil {
-		return errors.New("uuid生成失败异常: " + err2.Error())
-	}
-	ext := path.Ext(fileHeader.Filename)
+	filePo, err := f.fileDao.GetFileByHash(fmt.Sprintf("%x", hash))
+	var objectName string
+	var onePo *ent.CentralStoragePool
+	if ent.IsNotFound(err) {
+		newUUID, err2 := uuid.NewUUID()
+		if err2 != nil {
+			return errors.New("uuid生成失败异常: " + err2.Error())
+		}
+		ext := path.Ext(fileHeader.Filename)
 
-	objectName := newUUID.String() + ext
-	info, err2 := upload.PutObject(objectName, fileHeader)
-	if err2 != nil {
-		return errors.New("上传文件失败: : " + err2.Error())
-	}
+		objectName = newUUID.String() + ext
+		info, err2 := upload.PutObject(objectName, fileHeader)
+		if err2 != nil {
+			return errors.New("上传文件失败: " + err2.Error())
+		}
+		unique, err2 := f.fileDao.CheckFilenameUnique(objectName, parentId, uid)
+		if err != nil || unique != 0 {
+			return errors.New("上传文件失败: " + "文件已存在")
+		}
 
-	var one ent.CentralStoragePool
-	one.Filename = objectName
-	one.Path = info.Bucket + "/" + info.Key
-	one.Ext = ext
-	one.Hash = fmt.Sprintf("%x", hash)
-	one.Size = float64(fileHeader.Size)
-	onePo, err := f.fileDao.AddFile(one)
-	if err != nil {
-		return errors.New("上传文件失败: : " + err.Error())
+		var one ent.CentralStoragePool
+		one.Filename = objectName
+		one.Path = info.Bucket + "/" + info.Key
+		one.Ext = ext
+		one.Hash = fmt.Sprintf("%x", hash)
+		one.Size = float64(fileHeader.Size)
+		onePo, err = f.fileDao.AddFile(one)
+		if err != nil {
+			return errors.New("上传文件失败: : " + err.Error())
+		}
+	} else {
+		unique, err := f.fileDao.CheckFilenameUnique(filePo.Filename, parentId, uid)
+		if err != nil || unique != 0 {
+			return errors.New("上传文件失败: " + "文件已存在")
+		}
+		onePo = filePo
 	}
-
-	f.fileDao.AddRelation(onePo, uid)
+	f.fileDao.AddRelation(onePo, uid, parentId)
 	return nil
 }
 
 func (f FileService) GetUserFile(uid, parentId int, p models.Paginate) ([]models.File, int, error) {
 	return f.fileDao.GetUserFiles(uid, parentId, p)
+}
+
+func (f FileService) NewFolder(name string, parentId, uid int) error {
+	unique, err := f.fileDao.CheckFilenameUnique(name, parentId, uid)
+	if err != nil || unique != 0 {
+		return errors.New("创建文件夹失败: " + err.Error())
+	}
+	_, err = f.fileDao.CreateFolder(name, parentId, uid)
+	if err != nil {
+		return errors.New("创建文件夹失败: " + err.Error())
+	}
+	return nil
 }

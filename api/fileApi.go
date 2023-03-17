@@ -30,7 +30,15 @@ func (f FileApi) FileUpload(ctx *gin.Context) {
 		resp.Fail(ctx, err.Error())
 		return
 	}
-	err = f.fileService.UploadFile(file, uid)
+	var form struct {
+		ParentId int `form:"parentId" binding:"required"`
+	}
+	err = ctx.ShouldBind(&form)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	err = f.fileService.UploadFile(file, uid, form.ParentId)
 	if err != nil {
 		resp.Fail(ctx, err.Error())
 		return
@@ -41,7 +49,7 @@ func (f FileApi) UserFiles(ctx *gin.Context) {
 
 	var paginateExpand struct {
 		models.Paginate
-		parentId int `form:"parentId"`
+		ParentId int `form:"parentId"`
 	}
 
 	id, err2 := helper.GetUserIdByToken(ctx)
@@ -54,7 +62,7 @@ func (f FileApi) UserFiles(ctx *gin.Context) {
 		resp.Fail(ctx, err.Error())
 		return
 	}
-	files, count, err := f.fileService.GetUserFile(id, paginateExpand.parentId, paginateExpand.Paginate)
+	files, count, err := f.fileService.GetUserFile(id, paginateExpand.ParentId, paginateExpand.Paginate)
 	if err != nil {
 		resp.Fail(ctx, err.Error())
 		return
@@ -64,4 +72,27 @@ func (f FileApi) UserFiles(ctx *gin.Context) {
 		"total": count,
 	})
 
+}
+
+func (f FileApi) NewFolder(ctx *gin.Context) {
+	id, err := helper.GetUserIdByToken(ctx)
+	if err != nil {
+		resp.Fail(ctx, "token 无效")
+		return
+	}
+	var form struct {
+		Name     string `form:"name"`
+		ParentId int    `form:"parentId"`
+	}
+	err = ctx.ShouldBind(&form)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	err = f.fileService.NewFolder(form.Name, form.ParentId, id)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	resp.Success(ctx, nil)
 }
