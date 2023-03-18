@@ -98,3 +98,7 @@ func (f FileDao) GetUserFile(id, uid int) (*ent.UserStoragePool, error) {
 func (f FileDao) GetFileById(id int) (*ent.UserStoragePool, error) {
 	return f.db.UserStoragePool.Query().Where(userstoragepool.ID(id)).First(context.Background())
 }
+
+func (f FileDao) MoveFile(id, newPid int) (*ent.UserStoragePool, error) {
+	return f.db.UserStoragePool.UpdateOneID(id).SetParentID(newPid).Save(context.Background())
+}

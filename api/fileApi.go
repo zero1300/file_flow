@@ -115,3 +115,25 @@ func (f FileApi) DelFile(ctx *gin.Context) {
 	resp.Success(ctx, nil)
 
 }
+
+func (f FileApi) MoveFile(ctx *gin.Context) {
+	uid, err := helper.GetUserIdByToken(ctx)
+	if err != nil {
+		resp.Fail(ctx, "token 无效")
+		return
+	}
+	var form struct {
+		Id  int `form:"id"`
+		PID int `form:"parentId"`
+	}
+	err = ctx.ShouldBind(&form)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	err = f.fileService.MoveFile(form.Id, uid, form.PID)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+}

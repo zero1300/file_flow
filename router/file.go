@@ -14,5 +14,6 @@ func fileSetup() {
 		file.POST("/getUserFiles", fileApi.UserFiles)
 		file.POST("/newFolder", fileApi.NewFolder)
 		file.DELETE("/delFile/:id", fileApi.DelFile)
+		file.POST("/moveFile", fileApi.MoveFile)
 	})
 }

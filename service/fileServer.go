@@ -110,10 +110,51 @@ func (f FileService) DelUserFile(uid, id int) error {
 	return nil
 }
 
+func (f FileService) MoveFile(id, uid, pid int) error {
+	_, err := f.fileDao.GetUserFile(id, uid)
+	if err != nil {
+		return errors.New("移动文件失败")
+	}
+	if pid != 0 {
+		userFile, err := f.fileDao.GetUserFile(pid, uid)
+		if err != nil || userFile.Ext != "dir" {
+			return errors.New("移动文件失败")
+		}
+		if !f.moveCheck(id, pid) {
+			return errors.New("移动文件失败")
+		}
+	}
+
+	_, err = f.fileDao.MoveFile(id, pid)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	return nil
+}
+
 func (f FileService) isDir(id int) bool {
 	file, err := f.fileDao.GetFileById(id)
 	if err != nil {
 		return false
 	}
 	return file.Ext == "dir"
+}
+
+func (f FileService) moveCheck(source, target int) bool {
+	dir, err := f.fileDao.GetFileById(target)
+	if err != nil {
+		return false
+	}
+	if dir.ParentID == source {
+		return false
+	}
+	var pid = dir.ParentID
+	for pid != 0 {
+		curDir, _ := f.fileDao.GetFileById(pid)
+		if curDir.ParentID == source {
+			return false
+		}
+		pid = curDir.ParentID
+	}
+	return true
 }
