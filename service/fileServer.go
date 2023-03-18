@@ -28,6 +28,9 @@ func NewFileService() *FileService {
 
 func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId int) error {
 
+	if !f.isDir(parentId) {
+		return errors.New("上传文件失败: 非文件夹")
+	}
 	file, err := fileHeader.Open()
 	if err != nil {
 		return errors.New("文件异常: " + err.Error())
@@ -53,7 +56,7 @@ func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId 
 		if err2 != nil {
 			return errors.New("上传文件失败: " + err2.Error())
 		}
-		unique, err2 := f.fileDao.CheckFilenameUnique(objectName, parentId, uid)
+		unique, err := f.fileDao.CheckFilenameUnique(objectName, parentId, uid)
 		if err != nil || unique != 0 {
 			return errors.New("上传文件失败: " + "文件已存在")
 		}
@@ -84,6 +87,9 @@ func (f FileService) GetUserFile(uid, parentId int, p models.Paginate) ([]models
 }
 
 func (f FileService) NewFolder(name string, parentId, uid int) error {
+	if !f.isDir(parentId) {
+		return errors.New("上传文件失败: 非文件夹")
+	}
 	unique, err := f.fileDao.CheckFilenameUnique(name, parentId, uid)
 	if err != nil || unique != 0 {
 		return errors.New("创建文件夹失败: " + err.Error())
@@ -93,4 +99,21 @@ func (f FileService) NewFolder(name string, parentId, uid int) error {
 		return errors.New("创建文件夹失败: " + err.Error())
 	}
 	return nil
+}
+
+func (f FileService) DelUserFile(uid, id int) error {
+	count, err := f.fileDao.GetUserFile(id, uid)
+	if err != nil || ent.IsNotFound(err) || count.Ext == "dir" {
+		return errors.New("删除文件失败")
+	}
+	err = f.fileDao.DelFile(id)
+	return nil
+}
+
+func (f FileService) isDir(id int) bool {
+	file, err := f.fileDao.GetFileById(id)
+	if err != nil {
+		return false
+	}
+	return file.Ext == "dir"
 }

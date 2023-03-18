@@ -6,6 +6,7 @@ import (
 	"file_flow/models"
 	"file_flow/service"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type FileApi struct {
@@ -95,4 +96,22 @@ func (f FileApi) NewFolder(ctx *gin.Context) {
 		return
 	}
 	resp.Success(ctx, nil)
+}
+
+func (f FileApi) DelFile(ctx *gin.Context) {
+	uid, err := helper.GetUserIdByToken(ctx)
+	if err != nil {
+		resp.Fail(ctx, "token 无效")
+		return
+	}
+	idString := ctx.Param("id")
+	id, _ := strconv.Atoi(idString)
+
+	err = f.fileService.DelUserFile(uid, id)
+	if err != nil {
+		resp.Fail(ctx, err.Error())
+		return
+	}
+	resp.Success(ctx, nil)
+
 }

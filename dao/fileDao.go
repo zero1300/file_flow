@@ -82,3 +82,19 @@ func (f FileDao) CreateFolder(name string, parentId, uid int) (*ent.UserStorageP
 func (f FileDao) CheckFilenameUnique(name string, parentId, uid int) (int, error) {
 	return f.db.UserStoragePool.Query().Where(userstoragepool.Filename(name), userstoragepool.ParentID(parentId), userstoragepool.UID(uid)).Count(context.Background())
 }
+
+func (f FileDao) DelFile(id int) error {
+	return f.db.UserStoragePool.DeleteOneID(id).Exec(context.Background())
+}
+
+func (f FileDao) CountUserFile(id, uid int) (int, error) {
+	return f.db.UserStoragePool.Query().Where(userstoragepool.UID(uid), userstoragepool.ID(id)).Count(context.Background())
+}
+
+func (f FileDao) GetUserFile(id, uid int) (*ent.UserStoragePool, error) {
+	return f.db.UserStoragePool.Query().Where(userstoragepool.UID(uid), userstoragepool.ID(id)).First(context.Background())
+}
+
+func (f FileDao) GetFileById(id int) (*ent.UserStoragePool, error) {
+	return f.db.UserStoragePool.Query().Where(userstoragepool.ID(id)).First(context.Background())
+}
