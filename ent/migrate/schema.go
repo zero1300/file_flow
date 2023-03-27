@@ -3,13 +3,14 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
-	// CentralStoragePoolsColumns holds the columns for the "central_storage_pools" table.
-	CentralStoragePoolsColumns = []*schema.Column{
+	// CentralStoragePoolColumns holds the columns for the "central_storage_pool" table.
+	CentralStoragePoolColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "delete_at", Type: field.TypeTime, Nullable: true},
 		{Name: "filename", Type: field.TypeString, Size: 2147483647},
@@ -19,11 +20,25 @@ var (
 		{Name: "hash", Type: field.TypeString, Size: 2147483647},
 		{Name: "create_at", Type: field.TypeTime},
 	}
-	// CentralStoragePoolsTable holds the schema information for the "central_storage_pools" table.
-	CentralStoragePoolsTable = &schema.Table{
-		Name:       "central_storage_pools",
-		Columns:    CentralStoragePoolsColumns,
-		PrimaryKey: []*schema.Column{CentralStoragePoolsColumns[0]},
+	// CentralStoragePoolTable holds the schema information for the "central_storage_pool" table.
+	CentralStoragePoolTable = &schema.Table{
+		Name:       "central_storage_pool",
+		Columns:    CentralStoragePoolColumns,
+		PrimaryKey: []*schema.Column{CentralStoragePoolColumns[0]},
+	}
+	// SharesColumns holds the columns for the "shares" table.
+	SharesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_file_id", Type: field.TypeInt},
+		{Name: "expiration", Type: field.TypeInt},
+		{Name: "click_number", Type: field.TypeInt},
+		{Name: "create_at", Type: field.TypeTime},
+	}
+	// SharesTable holds the schema information for the "shares" table.
+	SharesTable = &schema.Table{
+		Name:       "shares",
+		Columns:    SharesColumns,
+		PrimaryKey: []*schema.Column{SharesColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -41,8 +56,8 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
-	// UserStoragePoolsColumns holds the columns for the "user_storage_pools" table.
-	UserStoragePoolsColumns = []*schema.Column{
+	// UserStoragePoolColumns holds the columns for the "user_storage_pool" table.
+	UserStoragePoolColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "delete_at", Type: field.TypeTime, Nullable: true},
 		{Name: "uid", Type: field.TypeInt},
@@ -52,19 +67,26 @@ var (
 		{Name: "ext", Type: field.TypeString, Size: 2147483647},
 		{Name: "create_at", Type: field.TypeTime},
 	}
-	// UserStoragePoolsTable holds the schema information for the "user_storage_pools" table.
-	UserStoragePoolsTable = &schema.Table{
-		Name:       "user_storage_pools",
-		Columns:    UserStoragePoolsColumns,
-		PrimaryKey: []*schema.Column{UserStoragePoolsColumns[0]},
+	// UserStoragePoolTable holds the schema information for the "user_storage_pool" table.
+	UserStoragePoolTable = &schema.Table{
+		Name:       "user_storage_pool",
+		Columns:    UserStoragePoolColumns,
+		PrimaryKey: []*schema.Column{UserStoragePoolColumns[0]},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		CentralStoragePoolsTable,
+		CentralStoragePoolTable,
+		SharesTable,
 		UsersTable,
-		UserStoragePoolsTable,
+		UserStoragePoolTable,
 	}
 )
 
 func init() {
+	CentralStoragePoolTable.Annotation = &entsql.Annotation{
+		Table: "central_storage_pool",
+	}
+	UserStoragePoolTable.Annotation = &entsql.Annotation{
+		Table: "user_storage_pool",
+	}
 }

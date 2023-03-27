@@ -74,4 +74,5 @@ func InitRoute() {
 func InitBaseRoutes() {
 	userSetup()
 	fileSetup()
+	shareSetup()
 }

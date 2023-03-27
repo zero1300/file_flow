@@ -9,6 +9,9 @@ import (
 // CentralStoragePool is the predicate function for centralstoragepool builders.
 type CentralStoragePool func(*sql.Selector)
 
+// Share is the predicate function for share builders.
+type Share func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

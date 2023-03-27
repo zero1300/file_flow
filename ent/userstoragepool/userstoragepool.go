@@ -28,7 +28,7 @@ const (
 	// FieldCreateAt holds the string denoting the create_at field in the database.
 	FieldCreateAt = "create_at"
 	// Table holds the table name of the userstoragepool in the database.
-	Table = "user_storage_pools"
+	Table = "user_storage_pool"
 )
 
 // Columns holds all SQL columns for userstoragepool fields.

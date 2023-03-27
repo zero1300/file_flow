@@ -11,6 +11,7 @@ import (
 	"file_flow/ent/migrate"
 
 	"file_flow/ent/centralstoragepool"
+	"file_flow/ent/share"
 	"file_flow/ent/user"
 	"file_flow/ent/userstoragepool"
 
@@ -26,6 +27,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// CentralStoragePool is the client for interacting with the CentralStoragePool builders.
 	CentralStoragePool *CentralStoragePoolClient
+	// Share is the client for interacting with the Share builders.
+	Share *ShareClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserStoragePool is the client for interacting with the UserStoragePool builders.
@@ -44,6 +47,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.CentralStoragePool = NewCentralStoragePoolClient(c.config)
+	c.Share = NewShareClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserStoragePool = NewUserStoragePoolClient(c.config)
 }
@@ -129,6 +133,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                ctx,
 		config:             cfg,
 		CentralStoragePool: NewCentralStoragePoolClient(cfg),
+		Share:              NewShareClient(cfg),
 		User:               NewUserClient(cfg),
 		UserStoragePool:    NewUserStoragePoolClient(cfg),
 	}, nil
@@ -151,6 +156,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                ctx,
 		config:             cfg,
 		CentralStoragePool: NewCentralStoragePoolClient(cfg),
+		Share:              NewShareClient(cfg),
 		User:               NewUserClient(cfg),
 		UserStoragePool:    NewUserStoragePoolClient(cfg),
 	}, nil
@@ -183,6 +189,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.CentralStoragePool.Use(hooks...)
+	c.Share.Use(hooks...)
 	c.User.Use(hooks...)
 	c.UserStoragePool.Use(hooks...)
 }
@@ -191,6 +198,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.CentralStoragePool.Intercept(interceptors...)
+	c.Share.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.UserStoragePool.Intercept(interceptors...)
 }
@@ -200,6 +208,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *CentralStoragePoolMutation:
 		return c.CentralStoragePool.mutate(ctx, m)
+	case *ShareMutation:
+		return c.Share.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserStoragePoolMutation:
@@ -326,6 +336,124 @@ func (c *CentralStoragePoolClient) mutate(ctx context.Context, m *CentralStorage
 		return (&CentralStoragePoolDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CentralStoragePool mutation op: %q", m.Op())
+	}
+}
+
+// ShareClient is a client for the Share schema.
+type ShareClient struct {
+	config
+}
+
+// NewShareClient returns a client for the Share from the given config.
+func NewShareClient(c config) *ShareClient {
+	return &ShareClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `share.Hooks(f(g(h())))`.
+func (c *ShareClient) Use(hooks ...Hook) {
+	c.hooks.Share = append(c.hooks.Share, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `share.Intercept(f(g(h())))`.
+func (c *ShareClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Share = append(c.inters.Share, interceptors...)
+}
+
+// Create returns a builder for creating a Share entity.
+func (c *ShareClient) Create() *ShareCreate {
+	mutation := newShareMutation(c.config, OpCreate)
+	return &ShareCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Share entities.
+func (c *ShareClient) CreateBulk(builders ...*ShareCreate) *ShareCreateBulk {
+	return &ShareCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Share.
+func (c *ShareClient) Update() *ShareUpdate {
+	mutation := newShareMutation(c.config, OpUpdate)
+	return &ShareUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ShareClient) UpdateOne(s *Share) *ShareUpdateOne {
+	mutation := newShareMutation(c.config, OpUpdateOne, withShare(s))
+	return &ShareUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ShareClient) UpdateOneID(id int) *ShareUpdateOne {
+	mutation := newShareMutation(c.config, OpUpdateOne, withShareID(id))
+	return &ShareUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Share.
+func (c *ShareClient) Delete() *ShareDelete {
+	mutation := newShareMutation(c.config, OpDelete)
+	return &ShareDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ShareClient) DeleteOne(s *Share) *ShareDeleteOne {
+	return c.DeleteOneID(s.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ShareClient) DeleteOneID(id int) *ShareDeleteOne {
+	builder := c.Delete().Where(share.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ShareDeleteOne{builder}
+}
+
+// Query returns a query builder for Share.
+func (c *ShareClient) Query() *ShareQuery {
+	return &ShareQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeShare},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Share entity by its id.
+func (c *ShareClient) Get(ctx context.Context, id int) (*Share, error) {
+	return c.Query().Where(share.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ShareClient) GetX(ctx context.Context, id int) *Share {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ShareClient) Hooks() []Hook {
+	return c.hooks.Share
+}
+
+// Interceptors returns the client interceptors.
+func (c *ShareClient) Interceptors() []Interceptor {
+	return c.inters.Share
+}
+
+func (c *ShareClient) mutate(ctx context.Context, m *ShareMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ShareCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ShareUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ShareUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ShareDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Share mutation op: %q", m.Op())
 	}
 }
 
@@ -572,9 +700,9 @@ func (c *UserStoragePoolClient) mutate(ctx context.Context, m *UserStoragePoolMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		CentralStoragePool, User, UserStoragePool []ent.Hook
+		CentralStoragePool, Share, User, UserStoragePool []ent.Hook
 	}
 	inters struct {
-		CentralStoragePool, User, UserStoragePool []ent.Interceptor
+		CentralStoragePool, Share, User, UserStoragePool []ent.Interceptor
 	}
 )

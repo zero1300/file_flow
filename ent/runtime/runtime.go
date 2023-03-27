@@ -5,6 +5,7 @@ package runtime
 import (
 	"file_flow/ent/centralstoragepool"
 	"file_flow/ent/schema"
+	"file_flow/ent/share"
 	"file_flow/ent/user"
 	"file_flow/ent/userstoragepool"
 	"time"
@@ -41,6 +42,12 @@ func init() {
 	centralstoragepoolDescCreateAt := centralstoragepoolFields[5].Descriptor()
 	// centralstoragepool.DefaultCreateAt holds the default value on creation for the create_at field.
 	centralstoragepool.DefaultCreateAt = centralstoragepoolDescCreateAt.Default.(time.Time)
+	shareFields := schema.Share{}.Fields()
+	_ = shareFields
+	// shareDescCreateAt is the schema descriptor for create_at field.
+	shareDescCreateAt := shareFields[3].Descriptor()
+	// share.DefaultCreateAt holds the default value on creation for the create_at field.
+	share.DefaultCreateAt = shareDescCreateAt.Default.(time.Time)
 	userMixin := schema.User{}.Mixin()
 	userMixinHooks0 := userMixin[0].Hooks()
 	user.Hooks[0] = userMixinHooks0[0]

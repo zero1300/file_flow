@@ -94,6 +94,33 @@ func (f TraverseCentralStoragePool) Traverse(ctx context.Context, q ent.Query) e
 	return fmt.Errorf("unexpected query type %T. expect *ent.CentralStoragePoolQuery", q)
 }
 
+// The ShareFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ShareFunc func(context.Context, *ent.ShareQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ShareFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ShareQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ShareQuery", q)
+}
+
+// The TraverseShare type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseShare func(context.Context, *ent.ShareQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseShare) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseShare) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ShareQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ShareQuery", q)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary function as a Querier.
 type UserFunc func(context.Context, *ent.UserQuery) (ent.Value, error)
 
@@ -153,6 +180,8 @@ func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
 	case *ent.CentralStoragePoolQuery:
 		return &query[*ent.CentralStoragePoolQuery, predicate.CentralStoragePool]{typ: ent.TypeCentralStoragePool, tq: q}, nil
+	case *ent.ShareQuery:
+		return &query[*ent.ShareQuery, predicate.Share]{typ: ent.TypeShare, tq: q}, nil
 	case *ent.UserQuery:
 		return &query[*ent.UserQuery, predicate.User]{typ: ent.TypeUser, tq: q}, nil
 	case *ent.UserStoragePoolQuery:

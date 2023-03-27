@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"file_flow/ent/centralstoragepool"
+	"file_flow/ent/share"
 	"file_flow/ent/user"
 	"file_flow/ent/userstoragepool"
 	"fmt"
@@ -68,6 +69,7 @@ type OrderFunc func(*sql.Selector)
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		centralstoragepool.Table: centralstoragepool.ValidColumn,
+		share.Table:              share.ValidColumn,
 		user.Table:               user.ValidColumn,
 		userstoragepool.Table:    userstoragepool.ValidColumn,
 	}

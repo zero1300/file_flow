@@ -28,6 +28,7 @@ func NewFileService() *FileService {
 
 func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId int) error {
 
+	// 判断 parentId 是否是文件夹
 	if !f.isDir(parentId) {
 		return errors.New("上传文件失败: 非文件夹")
 	}
@@ -40,27 +41,27 @@ func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId 
 	if err != nil {
 		return errors.New("读取文件异常: " + err.Error())
 	}
+	// 获得文件的 hash
 	hash := md5.Sum(b)
+	// 判断中心池是否已经存在该文件
 	filePo, err := f.fileDao.GetFileByHash(fmt.Sprintf("%x", hash))
-	var objectName string
 	var onePo *ent.CentralStoragePool
 	if ent.IsNotFound(err) {
+		// 不存在则上传至中心池
 		newUUID, err2 := uuid.NewUUID()
 		if err2 != nil {
 			return errors.New("uuid生成失败异常: " + err2.Error())
 		}
 		ext := path.Ext(fileHeader.Filename)
 
+		var objectName string
+
 		objectName = newUUID.String() + ext
 		info, err2 := upload.PutObject(objectName, fileHeader)
 		if err2 != nil {
 			return errors.New("上传文件失败: " + err2.Error())
 		}
-		unique, err := f.fileDao.CheckFilenameUnique(objectName, parentId, uid)
-		if err != nil || unique != 0 {
-			return errors.New("上传文件失败: " + "文件已存在")
-		}
-
+		// 往中心池子添加文件
 		var one ent.CentralStoragePool
 		one.Filename = objectName
 		one.Path = info.Bucket + "/" + info.Key
@@ -72,12 +73,14 @@ func (f FileService) UploadFile(fileHeader *multipart.FileHeader, uid, parentId 
 			return errors.New("上传文件失败: : " + err.Error())
 		}
 	} else {
-		unique, err := f.fileDao.CheckFilenameUnique(filePo.Filename, parentId, uid)
-		if err != nil || unique != 0 {
-			return errors.New("上传文件失败: " + "文件已存在")
-		}
 		onePo = filePo
 	}
+	filename := fileHeader.Filename
+	unique, err := f.fileDao.CheckFilenameUnique(filename, parentId, uid)
+	if err != nil || unique != 0 {
+		return errors.New("上传文件失败: " + "文件已存在")
+	}
+	onePo.Filename = filename
 	f.fileDao.AddRelation(onePo, uid, parentId)
 	return nil
 }

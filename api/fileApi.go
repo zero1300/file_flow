@@ -32,7 +32,7 @@ func (f FileApi) FileUpload(ctx *gin.Context) {
 		return
 	}
 	var form struct {
-		ParentId int `form:"parentId" binding:"required"`
+		ParentId int `form:"parentId"`
 	}
 	err = ctx.ShouldBind(&form)
 	if err != nil {

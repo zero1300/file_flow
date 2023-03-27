@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// CentralStoragePool is the client for interacting with the CentralStoragePool builders.
 	CentralStoragePool *CentralStoragePoolClient
+	// Share is the client for interacting with the Share builders.
+	Share *ShareClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserStoragePool is the client for interacting with the UserStoragePool builders.
@@ -150,6 +152,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.CentralStoragePool = NewCentralStoragePoolClient(tx.config)
+	tx.Share = NewShareClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserStoragePool = NewUserStoragePoolClient(tx.config)
 }

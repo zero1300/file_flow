@@ -3,7 +3,7 @@ server:
 
 db:
   driverName: postgres
-  dsn: "host=127.0.0.1 port=5432 user=postgres dbname=file_flow password=Root@1998 sslmode=disable"
+  dsn: "host=127.0.0.1 port=5432 user=postgres dbname=file_flow password=Root@1998 sslmode=disable TimeZone=Asia/Shanghai"
 
 redis:
   addr: 127.0.0.1:6379
